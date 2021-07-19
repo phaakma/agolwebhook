@@ -1,4 +1,3 @@
-# NOTE: update this with your service name
 service: agol-webhook
 
 # Create an optimized package for our functions 
@@ -6,9 +5,7 @@ package:
   individually: true
 
 plugins:
-  - serverless-bundle # Package our functions with Webpack
-  - serverless-offline
-  - serverless-dotenv-plugin # Load .env as environment variables
+  - serverless-bundle
   - serverless-deployment-bucket
 
 provider:
@@ -20,6 +17,7 @@ provider:
   deploymentBucket:
     name: serverless-deployment-bucket-p389201dj
     serverSideEncryption: AES256
+    blockPublicAccess: true
 
 custom:
   deploymentBucket:
@@ -27,11 +25,31 @@ custom:
   profiles:
     dev: serverless-deploymentagent
     prod: prodProfile
+  bundle:
+    linting: false
 
 functions:
-  hello:
-    handler: lib/handlers/handler.hello
+  webhook_api:
+    description: "This receives a payload from an ArcGIS Online webhook and processes it."
+    memorySize: 256 # memorySize for this specific function.
+    handler: lib/handlers/handler.handleWebhook
+    environment: ${file(./env.yml):${self:provider.stage}}      
     events:
       - http:
-          path: hello
+          path: webhook/{webhook_id}
           method: post
+          cors:
+            origin: https://*arcgis.com
+            headers: # <-- Specify allowed headers
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+
+            allowCredentials: false
+
+resources:
+  #API Gateway Errors
+  - ${file(resources/api-gateway-errors.yml)}
