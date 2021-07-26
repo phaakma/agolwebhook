@@ -6,6 +6,10 @@ https://www.esri.com/arcgis-blog/products/arcgis-online/sharing-collaboration/ho
 
 That link shows how to set one up and link it to Integromat
 
+REST API Documentation:
+https://developers.arcgis.com/rest/services-reference/online/web-hooks-create-feature-service-.htm
+
+
 
 Webhook samples for the admin webhooks, includes local python and node servers too.
 https://github.com/Esri/webhooks-samples

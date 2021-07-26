@@ -18,6 +18,7 @@ provider:
     name: serverless-deployment-bucket-p389201dj
     serverSideEncryption: AES256
     blockPublicAccess: true
+  lambdaHashingVersion: "20201221"
 
 custom:
   deploymentBucket:
@@ -31,24 +32,15 @@ custom:
 functions:
   webhook_api:
     description: "This receives a payload from an ArcGIS Online webhook and processes it."
-    memorySize: 256 # memorySize for this specific function.
+    memorySize: 128
     handler: lib/handlers/handler.handleWebhook
-    environment: ${file(./env.yml):${self:provider.stage}}      
+    environment: ${file(./env.yml):${self:provider.stage}}
+    timeout: 30 
     events:
       - http:
           path: webhook/{webhook_id}
           method: post
-          cors:
-            origin: https://*arcgis.com
-            headers: # <-- Specify allowed headers
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-
-            allowCredentials: false
+          cors: true
 
 resources:
   #API Gateway Errors
