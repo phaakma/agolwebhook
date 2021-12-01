@@ -1,5 +1,9 @@
 # Serverless Use Webhooks with ArcGIS Online
 
+to deploy just the webhook function:
+serverless deploy function -f webhook_api
+
+NOTE: Do not leave the webhook change types as a wildcard, otherwise it seems to always send the very first server gen number each time resulting it ALL features every time.
 
 Setting up a webhook:
 https://www.esri.com/arcgis-blog/products/arcgis-online/sharing-collaboration/how-to-create-a-hosted-feature-service-webhook/
