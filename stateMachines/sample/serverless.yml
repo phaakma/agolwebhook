@@ -1,0 +1,53 @@
+service: webhookStateMachineSample
+
+# Create an optimized package for our functions 
+package:
+  individually: true
+
+plugins:
+  - serverless-bundle
+  - serverless-deployment-bucket
+  - serverless-step-functions
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: us-east-1
+  profile: ${self:custom.profiles.${self:provider.stage}}
+  deploymentBucket:
+    name: serverless-deployment-bucket-p389201dj
+    serverSideEncryption: AES256
+    blockPublicAccess: true
+  lambdaHashingVersion: "20201221"
+
+custom:
+  deploymentBucket:
+    blockPublicAccess: true
+  profiles:
+    dev: serverless-deploymentagent
+    prod: prodProfile
+  bundle:
+    linting: false
+
+functions:
+  sampleLogInfo:
+    description: "This just logs a message when run to CloudWatch."
+    memorySize: 128
+    handler: sample.hello
+    environment: ${file(./env.yml):${self:provider.stage}}
+
+stepFunctions:
+  validate: true
+  stateMachines:
+    mySample1StateMachine:
+      #${file(stateMachines/webhook1.yml)}
+      name: mySampleStateMachine-${self:provider.stage}
+      definition:
+        Comment: "Just an example state machine to get us going"
+        StartAt: FirstState
+        States:
+          FirstState:
+            Type: Task
+            Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-${self:provider.stage}-sampleLogInfo"
+            End: true

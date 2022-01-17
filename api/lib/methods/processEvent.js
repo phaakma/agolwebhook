@@ -7,14 +7,14 @@ export const dependencies = {
 
 export const call = async (event, context) => {
 
-    console.log("made it into the processEvent method...")
-
     const { fetch, UserSession, crypto, request } = dependencies;
     const body = JSON.parse(event.body)
 
+    //console.log( decodeURIComponent(body[0].changesUrl) );
 
     //verify the Webhook with HMAC
     const { webhook_id } = event.pathParameters;
+    console.log(`webhook id: ${webhook_id}`)
     const secretKey = await getSecretKey(webhook_id);
     const signature = event.headers["x-esriHook-Signature"];
     const hash = crypto
@@ -30,7 +30,7 @@ export const call = async (event, context) => {
         }
     }
 
-    
+    console.log(`Passed the signature key test!`)
 
     const data = await fetchChangesData(event, UserSession, fetch);
 
@@ -38,7 +38,7 @@ export const call = async (event, context) => {
 
     // example webhook id: 0c4ce050-48da-4fc1-9c11-8fc2e42de1f0
 
-    let response;
+    let response = {};
     switch (webhook_id) {
         case "0c4ce050-48da-4fc1-9c11-8fc2e42de1f0":
             response = await webhook1_process_data(data);
@@ -58,7 +58,10 @@ export const call = async (event, context) => {
 
 const getSecretKey = async (webhook_id) => {
     const webhook_database = {
-        "0c4ce050-48da-4fc1-9c11-8fc2e42de1f0": "bananas"
+        "0c4ce050-48da-4fc1-9c11-8fc2e42de1f0": "bananas",
+        "536bb86f-9a75-4fa6-b05a-a225efc53bbc": "bananas",
+        "78649830-cf5b-4992-bd14-99a1f6fb389d": "bananas",
+        "c436d762-d547-4bbb-b2b0-5a4f0b03cfa9": "bananas"
     }
 
     return webhook_database[webhook_id];
@@ -74,6 +77,9 @@ const fetchChangesData = async (event, UserSession, fetch) => {
     //get user session
     const session = new UserSession({ username, password });
     await session.refreshSession();
+
+    console.log("After the sign in.....")
+    console.log(session.token)
 
     //use changeUrl to get a statusUrl
     const changeUrl = decodeURIComponent(body[0].changesUrl);
@@ -91,11 +97,11 @@ const fetchChangesData = async (event, UserSession, fetch) => {
     )
     const changeUrlResponseJson = await changeUrlResponse.json();
 
-    console.log("changeUrlResponseJson", changeUrlResponseJson);
+    //console.log("changeUrlResponseJson", changeUrlResponseJson);
 
     const statusUrl = changeUrlResponseJson.statusUrl;
 
-    console.log(`${statusUrl}?f=json&token=${session.token}`)
+    //console.log(`${statusUrl}?f=json&token=${session.token}`)
     //example statusUrl
     //https://services.arcgis.com/hMYNkrKaydBeWRXE/ArcGIS/rest/services/Webhook_Demo/FeatureServer/jobs/e7d91d67-c9df-4d4d-b6db-f018c5c505cb?f=json
 
@@ -112,7 +118,7 @@ const fetchChangesData = async (event, UserSession, fetch) => {
 
     while (retryCount < maxRetries) {
         retryCount++;
-        console.log("retry #", retryCount);
+        //console.log("retry #", retryCount);
         const statusUrlResponse = await fetch(
             `${statusUrl}?f=json&token=${session.token}`,
             {
@@ -120,11 +126,11 @@ const fetchChangesData = async (event, UserSession, fetch) => {
             }
         )
 
-        console.log("statusUrlResponse::", statusUrlResponse);
+        //console.log("statusUrlResponse::", statusUrlResponse);
 
         const statusUrlResponseJson = await statusUrlResponse.json();
 
-        console.log("statusUrlResponseJson::", statusUrlResponseJson)
+        //console.log("statusUrlResponseJson::", statusUrlResponseJson)
 
         if (statusUrlResponseJson.status && statusUrlResponseJson.status === "Completed") {
             resultUrl = statusUrlResponseJson.resultUrl
@@ -139,7 +145,7 @@ const fetchChangesData = async (event, UserSession, fetch) => {
         await pause(2000);
     }
 
-    console.log("resultUrl", resultUrl)
+    //console.log("resultUrl", resultUrl)
     //example result url
     //https://services.arcgis.com/hMYNkrKaydBeWRXE/ArcGIS/rest/services/Webhook_Demo/FeatureServer/changefiles/3d89a964d1d54c08887894e84adb25cf.json
 

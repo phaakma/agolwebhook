@@ -7,6 +7,7 @@ package:
 plugins:
   - serverless-bundle
   - serverless-deployment-bucket
+  - serverless-step-functions
 
 provider:
   name: aws
@@ -19,6 +20,11 @@ provider:
     serverSideEncryption: AES256
     blockPublicAccess: true
   lambdaHashingVersion: "20201221"
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - states:StartExecution
+      Resource: "*"
 
 custom:
   deploymentBucket:
